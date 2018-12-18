@@ -1,3 +1,5 @@
+import collections.abc
+
 from bitmovin.resources.models.encodings.pertitle import PerTitle
 from bitmovin.errors import InvalidTypeError
 from bitmovin.resources.enums import EncodingMode
@@ -123,17 +125,15 @@ class StartEncodingRequest(Serializable):
             self._vod_dash_manifests = None
             return
 
-        if not isinstance(new_vod_dash_manifests, list):
-            raise InvalidTypeError('new_vod_dash_manifests has to be a list of VodDashManifest objects')
+        if not isinstance(new_vod_dash_manifests, collections.Iterable):
+            raise InvalidTypeError('new_vod_dash_manifests has to be a list of VodDashStartManifest objects, is{}'
+                                   .format(type(new_vod_dash_manifests)))
 
-        if all(isinstance(start_manifest, VodDashStartManifest) for start_manifest in new_vod_dash_manifests):
-            self._vod_dash_manifests = new_vod_dash_manifests
-        else:
-            start_manifests = []
-            for json_object in new_vod_dash_manifests:
-                start_manifest = VodDashStartManifest.parse_from_json_object(json_object=json_object)
-                start_manifests.append(start_manifest)
-            self._vod_dash_manifests = start_manifests
+        for start_manifest in new_vod_dash_manifests:
+            if not isinstance(start_manifest, VodDashStartManifest):
+                raise InvalidTypeError('new_vod_dash_manifests has to be a list of VodDashStartManifest objects, is {}'.format(start_manifest))
+
+        self._vod_dash_manifests = new_vod_dash_manifests
 
     @property
     def vodHlsManifests(self):
@@ -145,17 +145,14 @@ class StartEncodingRequest(Serializable):
             self._vod_hls_manifests = None
             return
 
-        if not isinstance(new_vod_hls_manifests, list):
-            raise InvalidTypeError('new_vod_hls_manifests has to be a list of VodHlsManifest objects')
+        if not isinstance(new_vod_hls_manifests, collections.abc.Iterable):
+            raise InvalidTypeError('new_vod_hls_manifests has to be an iterable of VodHlsStartManifest objects, is {}'
+                                   .format(type(new_vod_hls_manifests)))
 
-        if all(isinstance(start_manifest, VodHlsStartManifest) for start_manifest in new_vod_hls_manifests):
-            self._vod_hls_manifests = new_vod_hls_manifests
-        else:
-            start_manifests = []
-            for json_object in new_vod_hls_manifests:
-                start_manifest = VodHlsStartManifest.parse_from_json_object(json_object=json_object)
-                start_manifests.append(start_manifest)
-            self._vod_hls_manifests = start_manifests
+        for start_manifest in new_vod_hls_manifests:
+            if not isinstance(start_manifest, VodHlsStartManifest):
+                raise InvalidTypeError('new_vod_hls_manifests has to be a list of VodHlsStartManifest objects, is {}'.format(type(start_manifest)))
+        self._vod_hls_manifests = new_vod_hls_manifests
 
     def serialize(self):
         serialized = super().serialize()
